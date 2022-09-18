@@ -1,0 +1,63 @@
+<html lang="en">
+<head>
+    <title> Song Swears </title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'index.css') }}">
+    <link rel="icon" href="https://e7.pngegg.com/pngimages/941/502/png-clipart-profanity-word-english-swearing-s-english-text.png">
+</head>
+<body>
+    <h1 class = "title"> Explicatives in Songs </h1>
+
+
+        <form class = "grid" action = "/result" method = "POST">
+            <center>
+                
+                {% if song %}
+                
+                <img src = "{{ song['image'] }}" class = "img_format">
+                    <h1 class = "display"> {{song["title"]}} </h1>
+                    <h2 class = "display"> by {{song["artist"]}} </h2>
+                    {% if len(result) != 0 %}
+                        
+                        {% for word in song["lyrics"] %}
+                            {% for key in result.items() %}
+                                {% if key == word %}
+                                    <h3 class = "display"> <mark> {{word}} </mark></h3> 
+
+                                {% endif %}
+                            {% endfor %}
+
+                        {% endfor %}
+
+                        <h3 class = "display"> <mark> </mark></h3> 
+                    
+                        {% for key, value in result.items() %}
+
+                            <h3 class = "display"> {{key}} appears {{value}} times </h3>
+                        {% endfor %}
+                    {% else %}
+                        <h3 class = "display"> has no noticeable swears </h3>
+                    {% endif %}
+
+                    <iframe width="420" height="315" src="{{video}}" class="jiggle">
+                    </iframe>
+
+                {% else %}
+                    <h3 class = "error"> {{error}} </h3>
+
+                {% endif %}
+                
+            </center>
+
+            <label for = "song" class = "about_txt"> Enter a song: </label>
+            <input type="text" name="song" id = "song">
+
+            <center><input type = "Submit" class = "file_submit"></center>
+            
+        </form>
+        
+
+        <a href="{{ url_for('about') }}" class = "center"> About </a>
+</body>
+</html>
