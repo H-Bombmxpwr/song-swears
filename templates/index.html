@@ -1,63 +1,237 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <title> Song Swears </title>
+    <title>Song Swears</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename= 'index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
     <link rel="icon" href="https://e7.pngegg.com/pngimages/941/502/png-clipart-profanity-word-english-swearing-s-english-text.png">
 </head>
 <body>
-    <h1 class = "title"> Explicatives in Songs </h1>
+    <!-- Loading Screen -->
+    <div class="loader-wrapper" id="loader">
+        <div class="loader-content">
+            <div class="loader">
+                <div class="loader-inner"></div>
+            </div>
+            <p class="loader-text">Searching for lyrics...</p>
+        </div>
+    </div>
 
+    <div class="main-content" id="main-content">
+        <h1 class="title">Explicatives in Songs</h1>
 
-        <form class = "grid" action = "/result" method = "POST">
-            <center>
-                
+        <form class="search-form" action="/result" method="POST" id="search-form">
+            <div class="form-container">
                 {% if song %}
-                
-                <img src = "{{ song['image'] }}" class = "img_format">
-                    <h1 class = "display"> {{song["title"]}} </h1>
-                    <h2 class = "display"> by {{song["artist"]}} </h2>
-                    {% if len(result) != 0 %}
-                        
-                        {% for word in song["lyrics"] %}
-                            {% for key in result.items() %}
-                                {% if key == word %}
-                                    <h3 class = "display"> <mark> {{word}} </mark></h3> 
+                <!-- Results Section -->
+                <div class="results-section">
+                    <div class="song-info">
+                        {% if song['image'] %}
+                        <img src="{{ song['image'] }}" class="img_format" alt="Album artwork">
+                        {% endif %}
+                        <h1 class="display song-title">{{ song["title"] }}</h1>
+                        <h2 class="display artist-name">by {{ song["artist"] }}</h2>
+                    </div>
 
-                                {% endif %}
-                            {% endfor %}
+                    <div class="swear-results">
+                        {% if len(result) != 0 %}
+                            <div class="swear-count-header">
+                                <span class="swear-badge">{{ len(result) }} explicit words found</span>
+                            </div>
+                            <div class="swear-list">
+                                {% for key, value in result.items() %}
+                                    <div class="swear-item">
+                                        <span class="swear-word">{{ key }}</span>
+                                        <span class="swear-count">{{ value }}x</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="clean-song">
+                                <span class="clean-badge">Clean! No swears detected</span>
+                            </div>
+                        {% endif %}
+                    </div>
 
-                        {% endfor %}
-
-                        <h3 class = "display"> <mark> </mark></h3> 
-                    
-                        {% for key, value in result.items() %}
-
-                            <h3 class = "display"> {{key}} appears {{value}} times </h3>
-                        {% endfor %}
-                    {% else %}
-                        <h3 class = "display"> has no noticeable swears </h3>
+                    {% if video %}
+                    <div class="video-container">
+                        <a href="{{ video }}" target="_blank" rel="noopener noreferrer" class="youtube-button">
+                            <svg class="youtube-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                            Watch on YouTube
+                        </a>
+                    </div>
                     {% endif %}
-
-                    <iframe width="420" height="315" src="{{video}}" class="jiggle">
-                    </iframe>
-
-                {% else %}
-                    <h3 class = "error"> {{error}} </h3>
-
+                </div>
+                {% elif error %}
+                <div class="error-section">
+                    <h3 class="error">{{ error }}</h3>
+                </div>
                 {% endif %}
-                
-            </center>
 
-            <label for = "song" class = "about_txt"> Enter a song: </label>
-            <input type="text" name="song" id = "song">
+                <!-- Search Section -->
+                <div class="search-section">
+                    <div class="input-group autocomplete-container">
+                        <label for="song-search" class="input-label">Search for a song</label>
+                        <input type="text"
+                               id="song-search"
+                               placeholder="Start typing a song name..."
+                               autocomplete="off">
+                        <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
 
-            <center><input type = "Submit" class = "file_submit"></center>
-            
+                        <!-- Hidden fields for form submission -->
+                        <input type="hidden" name="track_id" id="track_id">
+                        <input type="hidden" name="artist" id="artist">
+                        <input type="hidden" name="song" id="song">
+                    </div>
+
+                    <div id="selected-song" class="selected-song" style="display: none;">
+                        <img id="selected-image" src="" alt="Album art" class="selected-image">
+                        <div class="selected-info">
+                            <span id="selected-name" class="selected-name"></span>
+                            <span id="selected-artist" class="selected-artist"></span>
+                        </div>
+                        <button type="button" id="clear-selection" class="clear-button">&times;</button>
+                    </div>
+
+                    <button type="submit" class="file_submit" id="submit-btn" disabled>Search</button>
+                </div>
+            </div>
         </form>
-        
 
-        <a href="{{ url_for('about') }}" class = "center"> About </a>
+        <a href="{{ url_for('about') }}" class="about-link">About</a>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('song-search');
+        const dropdown = document.getElementById('autocomplete-dropdown');
+        const trackIdInput = document.getElementById('track_id');
+        const artistInput = document.getElementById('artist');
+        const songInput = document.getElementById('song');
+        const selectedSong = document.getElementById('selected-song');
+        const selectedImage = document.getElementById('selected-image');
+        const selectedName = document.getElementById('selected-name');
+        const selectedArtist = document.getElementById('selected-artist');
+        const clearButton = document.getElementById('clear-selection');
+        const submitBtn = document.getElementById('submit-btn');
+        const loader = document.getElementById('loader');
+        const form = document.getElementById('search-form');
+
+        let debounceTimer;
+
+        // Hide loader on page load
+        window.addEventListener('load', function() {
+            loader.style.display = 'none';
+        });
+
+        // Debounced search
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const query = this.value.trim();
+
+            if (query.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                fetch(`/api/autocomplete?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(tracks => {
+                        if (tracks.length === 0) {
+                            dropdown.innerHTML = '<div class="autocomplete-item no-results">No songs found</div>';
+                        } else {
+                            dropdown.innerHTML = tracks.map(track => `
+                                <div class="autocomplete-item"
+                                     data-id="${track.id}"
+                                     data-name="${escapeHtml(track.name)}"
+                                     data-artist="${escapeHtml(track.artist)}"
+                                     data-image="${track.image || ''}">
+                                    <img src="${track.image || ''}" alt="" class="autocomplete-image">
+                                    <div class="autocomplete-info">
+                                        <span class="autocomplete-name">${escapeHtml(track.name)}</span>
+                                        <span class="autocomplete-artist">${escapeHtml(track.artist)}</span>
+                                    </div>
+                                </div>
+                            `).join('');
+                        }
+                        dropdown.style.display = 'block';
+                    })
+                    .catch(err => {
+                        console.error('Autocomplete error:', err);
+                        dropdown.style.display = 'none';
+                    });
+            }, 300);
+        });
+
+        // Handle click on autocomplete item
+        dropdown.addEventListener('click', function(e) {
+            const item = e.target.closest('.autocomplete-item');
+            if (item && !item.classList.contains('no-results')) {
+                selectTrack(item);
+            }
+        });
+
+        function selectTrack(item) {
+            const id = item.dataset.id;
+            const name = item.dataset.name;
+            const artist = item.dataset.artist;
+            const image = item.dataset.image;
+
+            // Set hidden form values
+            trackIdInput.value = id;
+            artistInput.value = artist;
+            songInput.value = name;
+
+            // Show selected song display
+            selectedImage.src = image;
+            selectedName.textContent = name;
+            selectedArtist.textContent = artist;
+            selectedSong.style.display = 'flex';
+
+            // Hide search input and dropdown
+            searchInput.style.display = 'none';
+            dropdown.style.display = 'none';
+
+            // Enable submit button
+            submitBtn.disabled = false;
+        }
+
+        // Clear selection
+        clearButton.addEventListener('click', function() {
+            trackIdInput.value = '';
+            artistInput.value = '';
+            songInput.value = '';
+            searchInput.value = '';
+            searchInput.style.display = 'block';
+            selectedSong.style.display = 'none';
+            submitBtn.disabled = true;
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.autocomplete-container')) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Show loader on form submit
+        form.addEventListener('submit', function(e) {
+            if (!trackIdInput.value) {
+                e.preventDefault();
+                return;
+            }
+            loader.style.display = 'flex';
+        });
+
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
 </body>
 </html>
