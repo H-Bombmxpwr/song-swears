@@ -81,14 +81,14 @@ def get_track_details(track_id):
 
 
 def lyric(artist, song):
-    """Fetch lyrics from lyrics.ovh API"""
+    """Fetch lyrics from lrclib.net API"""
     try:
-        # URL encode the artist and song
-        artist_encoded = urllib.parse.quote(artist.strip())
-        song_encoded = urllib.parse.quote(song.strip())
-
         response = requests.get(
-            f"https://api.lyrics.ovh/v1/{artist_encoded}/{song_encoded}",
+            "https://lrclib.net/api/get",
+            params={
+                "artist_name": artist.strip(),
+                "track_name": song.strip()
+            },
             timeout=15
         )
 
@@ -97,16 +97,14 @@ def lyric(artist, song):
 
         data = response.json()
 
-        if "error" in data:
-            return {"error": data["error"]}
-
-        if "lyrics" not in data or not data["lyrics"]:
+        lyrics = data.get("plainLyrics") or ""
+        if not lyrics:
             return {"error": "No lyrics found for this song."}
 
         return {
             "title": song.strip(),
             "artist": artist.strip(),
-            "lyrics": data["lyrics"],
+            "lyrics": lyrics,
             "image": None
         }
     except requests.exceptions.Timeout:
